@@ -1,5 +1,4 @@
 import json
-import os
 import time
 import uuid
 
@@ -7,6 +6,7 @@ import pytest
 
 from app import db
 from app.enrichment import build_title
+from app.ingest import ingest_payload
 from app.models import SlackEventPayload
 from app.queueing import QUEUES
 from app.workers import process_event
@@ -18,6 +18,12 @@ def setup_db(tmp_path, monkeypatch):
     db_path = tmp_path / "test.db"
     monkeypatch.setenv("DATABASE_PATH", str(db_path))
     db.init_db()
+    while not QUEUES.hot.empty():
+        QUEUES.hot.get_nowait()
+    while not QUEUES.standard.empty():
+        QUEUES.standard.get_nowait()
+    while not QUEUES.backfill.empty():
+        QUEUES.backfill.get_nowait()
     yield
     db.reset_db()
 
@@ -47,14 +53,13 @@ def make_payload(text: str, channel: str = "C001", user: str = "U001", ts: str =
 @pytest.mark.asyncio
 async def test_dedupe_behavior():
     payload = make_payload("hello")
-    inserted_first = db.insert_dedupe(payload.event_id)
-    db.insert_raw_event(payload.event_id, payload.model_dump())
-    QUEUES.standard.put_nowait(payload)
-
-    inserted_second = db.insert_dedupe(payload.event_id)
+    initial_size = QUEUES.standard.qsize()
+    inserted_first, _ = ingest_payload(payload)
+    inserted_second, _ = ingest_payload(payload)
 
     assert inserted_first is True
     assert inserted_second is False
+    assert QUEUES.standard.qsize() == initial_size + 1
 
 
 @pytest.mark.asyncio
