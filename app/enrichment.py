@@ -5,7 +5,7 @@ from app.threading import get_thread_text
 
 LABEL_KEYWORDS = {
     "DECISION": ["decision", "approve", "vote", "choose"],
-    "RISK": ["risk", "concern", "issue"],
+    "RISK": ["risk", "concern", "issue", "safer"],
     "BLOCKER": ["blocker", "blocked", "cannot proceed"],
     "ACTION": ["action", "todo", "follow up", "need to"],
     "FYI": ["fyi", "for your info", "heads up"],
@@ -60,7 +60,7 @@ def compute_urgency(text: str, reactions_json_list: List[str]) -> float:
     score = 0.0
     if any(deadline in lowered for deadline in DEADLINES):
         score += 0.35
-    if "urgent" in lowered or "blocker" in lowered:
+    if "urgent" in lowered or "blocker" in lowered or "blocked" in lowered:
         score += 0.25
     if any(phase.lower() in lowered for phase in PHASE_HINTS):
         score += 0.15
