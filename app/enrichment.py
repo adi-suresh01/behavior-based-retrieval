@@ -83,8 +83,11 @@ def build_title(entities: Dict[str, List[str]]) -> str:
 def build_summary(messages: List[Dict]) -> str:
     if not messages:
         return ""
-    root = messages[0]
-    replies = messages[1:6]
+    visible = [m for m in messages if not m.get("is_deleted")]
+    if not visible:
+        return ""
+    root = visible[0]
+    replies = visible[1:6]
     lines = []
     if root.get("text"):
         lines.append(f"- {root['text']}")
