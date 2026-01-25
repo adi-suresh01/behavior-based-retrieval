@@ -16,6 +16,7 @@ from app.profiles import (
 )
 from app.retrieval import load_candidate_items, retrieve_top_k, cosine_sim
 from app.rerank import rerank_candidates
+from app.digest import build_digest
 
 router = APIRouter()
 
@@ -228,3 +229,16 @@ async def debug_rerank(user_id: str, project_id: str, n: int = 10, labels: str |
         "n": n,
         "results": results,
     }
+
+
+@router.get("/digest")
+async def digest_endpoint(user_id: str, project_id: str, n: int = 10):
+    try:
+        result = build_digest(user_id, project_id, n=n)
+    except ValueError as exc:
+        if str(exc) == "user_not_found":
+            raise HTTPException(status_code=404, detail="Unknown user")
+        if str(exc) == "project_not_found":
+            raise HTTPException(status_code=404, detail="Unknown project")
+        raise HTTPException(status_code=400, detail="Missing role or phase data")
+    return result
