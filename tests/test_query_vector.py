@@ -54,13 +54,18 @@ def test_query_vector_changes_with_phase():
 
 def test_query_vector_fallback_role_only():
     create_role("role-1", "PM", "Owns delivery timelines and decisions")
-    create_project("proj-1", "Alpha", "")
+    create_phase("EVT", "Engineering validation testing phase")
+    create_project("proj-1", "Alpha", "EVT")
     create_user("user-1", "Ari", "role-1")
 
     with db.db_cursor() as cur:
         cur.execute(
             "UPDATE users SET user_vector_json = NULL WHERE user_id = ?",
             ("user-1",),
+        )
+        cur.execute(
+            "UPDATE projects SET current_phase = NULL WHERE project_id = ?",
+            ("proj-1",),
         )
 
     role_vec = json.loads(db.fetch_role("role-1")["role_vector_json"])

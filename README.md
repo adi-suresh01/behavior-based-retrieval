@@ -79,6 +79,7 @@ curl -X POST http://localhost:8000/users/user-1/projects/proj-1
 
 curl http://localhost:8000/profiles/users/user-1
 curl http://localhost:8000/profiles/projects/proj-1
+curl "http://localhost:8000/debug/query_vector?user_id=user-1&project_id=proj-1"
 ```
 
 Send a Slack-style event (signature verification disabled):
