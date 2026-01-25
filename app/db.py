@@ -393,19 +393,20 @@ def fetch_phase(phase_key: str) -> Optional[sqlite3.Row]:
         return cur.fetchone()
 
 
-def upsert_project(project_id: str, name: str, current_phase: str) -> None:
+def upsert_project(project_id: str, name: str, current_phase: str, channels_json: str) -> None:
     now = time.time()
     with db_cursor() as cur:
         cur.execute(
             """
-            INSERT INTO projects(project_id, name, current_phase, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO projects(project_id, name, current_phase, channels_json, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?)
             ON CONFLICT(project_id) DO UPDATE SET
                 name=excluded.name,
                 current_phase=excluded.current_phase,
+                channels_json=excluded.channels_json,
                 updated_at=excluded.updated_at
             """,
-            (project_id, name, current_phase, now, now),
+            (project_id, name, current_phase, channels_json, now, now),
         )
 
 
