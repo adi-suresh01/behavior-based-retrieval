@@ -171,6 +171,15 @@ def init_db() -> None:
             created_at REAL
         )
         """,
+        """
+        CREATE TABLE IF NOT EXISTS slack_workspaces (
+            team_id TEXT PRIMARY KEY,
+            access_token TEXT,
+            bot_user_id TEXT,
+            installed_at REAL,
+            scopes_json TEXT
+        )
+        """,
     ]
     with db_cursor() as cur:
         for stmt in schema_statements:
