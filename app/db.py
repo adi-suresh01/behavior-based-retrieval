@@ -161,6 +161,16 @@ def init_db() -> None:
             items_json TEXT
         )
         """,
+        """
+        CREATE TABLE IF NOT EXISTS interactions (
+            interaction_id TEXT PRIMARY KEY,
+            user_id TEXT,
+            project_id TEXT,
+            thread_ts TEXT,
+            action TEXT,
+            created_at REAL
+        )
+        """,
     ]
     with db_cursor() as cur:
         for stmt in schema_statements:
@@ -507,3 +517,30 @@ def fetch_digest(digest_id: str) -> Optional[sqlite3.Row]:
     with db_cursor() as cur:
         cur.execute("SELECT * FROM digests WHERE digest_id = ?", (digest_id,))
         return cur.fetchone()
+
+
+def insert_interaction(
+    interaction_id: str,
+    user_id: str,
+    project_id: str,
+    thread_ts: str,
+    action: str,
+) -> None:
+    with db_cursor() as cur:
+        cur.execute(
+            """
+            INSERT INTO interactions(interaction_id, user_id, project_id, thread_ts, action, created_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (interaction_id, user_id, project_id, thread_ts, action, time.time()),
+        )
+
+
+def update_user_vector(user_id: str, user_vector_json: str) -> None:
+    with db_cursor() as cur:
+        cur.execute(
+            """
+            UPDATE users SET user_vector_json = ?, updated_at = ? WHERE user_id = ?
+            """,
+            (user_vector_json, time.time(), user_id),
+        )
