@@ -48,6 +48,39 @@ curl http://localhost:8000/items
 curl http://localhost:8000/embeddings/<thread_ts>
 ```
 
+Profile layer examples:
+
+```bash
+curl -X POST http://localhost:8000/roles \
+  -H "Content-Type: application/json" \
+  -d '{"role_id":"role-pm","name":"PM","description":"Owns delivery timelines and decisions"}'
+
+curl -X POST http://localhost:8000/phases \
+  -H "Content-Type: application/json" \
+  -d '{"phase_key":"EVT","description":"Engineering validation testing phase"}'
+
+curl -X POST http://localhost:8000/projects \
+  -H "Content-Type: application/json" \
+  -d '{"project_id":"proj-1","name":"Alpha","current_phase":"EVT"}'
+
+curl -X PATCH http://localhost:8000/projects/proj-1/phase \
+  -H "Content-Type: application/json" \
+  -d '{"phase_key":"EVT"}'
+
+curl -X POST http://localhost:8000/users \
+  -H "Content-Type: application/json" \
+  -d '{"user_id":"user-1","name":"Ari","role_id":"role-pm"}'
+
+curl -X PATCH http://localhost:8000/users/user-1/role \
+  -H "Content-Type: application/json" \
+  -d '{"role_id":"role-pm"}'
+
+curl -X POST http://localhost:8000/users/user-1/projects/proj-1
+
+curl http://localhost:8000/profiles/users/user-1
+curl http://localhost:8000/profiles/projects/proj-1
+```
+
 Send a Slack-style event (signature verification disabled):
 
 ```bash
