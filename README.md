@@ -81,6 +81,7 @@ curl http://localhost:8000/profiles/users/user-1
 curl http://localhost:8000/profiles/projects/proj-1
 curl "http://localhost:8000/debug/query_vector?user_id=user-1&project_id=proj-1"
 curl "http://localhost:8000/debug/retrieve?user_id=user-1&project_id=proj-1&k=10"
+curl "http://localhost:8000/debug/rerank?user_id=user-1&project_id=proj-1&n=10"
 ```
 
 Send a Slack-style event (signature verification disabled):
