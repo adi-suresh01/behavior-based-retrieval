@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException
+import numpy as np
 from pydantic import BaseModel
 
 from app.profiles import (
@@ -13,6 +14,7 @@ from app.profiles import (
     update_project_phase,
     update_user_role,
 )
+from app.retrieval import load_candidate_items, retrieve_top_k
 
 router = APIRouter()
 
@@ -145,4 +147,26 @@ async def query_vector_debug(user_id: str, project_id: str):
         "q_vector": q_vector[:20],
         "component_norms": result["component_norms"],
         "component_top_indices": result["component_top_indices"],
+    }
+
+
+@router.get("/debug/retrieve")
+async def debug_retrieve(user_id: str, project_id: str, k: int = 50, labels: str | None = None):
+    label_filter = [label.strip().upper() for label in labels.split(",")] if labels else []
+    try:
+        q_result = get_query_vector(user_id, project_id)
+    except ValueError as exc:
+        if str(exc) == "user_not_found":
+            raise HTTPException(status_code=404, detail="Unknown user")
+        if str(exc) == "project_not_found":
+            raise HTTPException(status_code=404, detail="Unknown project")
+        raise HTTPException(status_code=400, detail="Missing role or phase data")
+    candidates = load_candidate_items(project_id=project_id, label_filter=label_filter)
+    q_vector = np.array(q_result["q_vector"], dtype=float)
+    results = retrieve_top_k(q_vector, candidates, k, label_filter=label_filter)
+    return {
+        "user_id": user_id,
+        "project_id": project_id,
+        "k": k,
+        "results": results,
     }
