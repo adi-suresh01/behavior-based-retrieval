@@ -490,3 +490,20 @@ def fetch_user_projects(user_id: str) -> Iterable[sqlite3.Row]:
             (user_id,),
         )
         return cur.fetchall()
+
+
+def insert_digest(digest_id: str, user_id: str, project_id: str, items_json: str) -> None:
+    with db_cursor() as cur:
+        cur.execute(
+            """
+            INSERT INTO digests(digest_id, user_id, project_id, created_at, items_json)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (digest_id, user_id, project_id, time.time(), items_json),
+        )
+
+
+def fetch_digest(digest_id: str) -> Optional[sqlite3.Row]:
+    with db_cursor() as cur:
+        cur.execute("SELECT * FROM digests WHERE digest_id = ?", (digest_id,))
+        return cur.fetchone()
