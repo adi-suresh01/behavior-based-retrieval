@@ -186,6 +186,16 @@ def init_db() -> None:
     with db_cursor() as cur:
         for stmt in schema_statements:
             cur.execute(stmt)
+        _ensure_messages_columns(cur)
+
+
+def _ensure_messages_columns(cur: sqlite3.Cursor) -> None:
+    cur.execute("PRAGMA table_info(messages)")
+    existing = {row[1] for row in cur.fetchall()}
+    if "is_deleted" not in existing:
+        cur.execute("ALTER TABLE messages ADD COLUMN is_deleted INTEGER DEFAULT 0")
+    if "edited_at" not in existing:
+        cur.execute("ALTER TABLE messages ADD COLUMN edited_at REAL")
 
 
 def insert_raw_event(event_id: str, payload: Dict[str, Any]) -> None:
