@@ -152,6 +152,15 @@ def init_db() -> None:
             PRIMARY KEY (user_id, project_id)
         )
         """,
+        """
+        CREATE TABLE IF NOT EXISTS digests (
+            digest_id TEXT PRIMARY KEY,
+            user_id TEXT,
+            project_id TEXT,
+            created_at REAL,
+            items_json TEXT
+        )
+        """,
     ]
     with db_cursor() as cur:
         for stmt in schema_statements:
