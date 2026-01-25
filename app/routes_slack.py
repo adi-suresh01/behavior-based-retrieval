@@ -4,7 +4,7 @@ from typing import Any, Dict
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import RedirectResponse
 
-from app.ingest import handle_slack_event, signature_verification_enabled, verify_slack_signature
+from app.ingest import ingest_payload, signature_verification_enabled, verify_slack_signature
 from app.models import IngestResult, SlackEventPayload
 from app.slack import build_install_url, exchange_code_for_token, store_workspace_token
 
@@ -49,5 +49,5 @@ async def slack_events(request: Request):
         event_payload = SlackEventPayload.model_validate(payload)
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid event payload")
-    inserted, event_id = handle_slack_event(request, event_payload)
+    inserted, event_id = ingest_payload(event_payload)
     return IngestResult(status="queued" if inserted else "duplicate", event_id=event_id)
