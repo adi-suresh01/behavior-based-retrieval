@@ -164,7 +164,18 @@ async def debug_retrieve(user_id: str, project_id: str, k: int = 50, labels: str
         raise HTTPException(status_code=400, detail="Missing role or phase data")
     candidates = load_candidate_items(project_id=project_id, label_filter=label_filter)
     q_vector = np.array(q_result["q_vector"], dtype=float)
-    results = retrieve_top_k(q_vector, candidates, k, label_filter=label_filter)
+    raw_results = retrieve_top_k(q_vector, candidates, k, label_filter=label_filter)
+    results = [
+        {
+            "thread_ts": item["thread_ts"],
+            "score": item["score"],
+            "urgency": item["urgency"],
+            "title": item["title"],
+            "labels": item["labels"],
+            "updated_at": item["updated_at"],
+        }
+        for item in raw_results
+    ]
     return {
         "user_id": user_id,
         "project_id": project_id,
