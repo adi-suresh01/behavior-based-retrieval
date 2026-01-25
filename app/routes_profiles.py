@@ -7,6 +7,7 @@ from app.profiles import (
     create_project,
     create_role,
     create_user,
+    get_query_vector,
     get_project_profile,
     get_user_profile,
     update_project_phase,
@@ -120,3 +121,27 @@ async def project_profile_endpoint(project_id: str):
         return get_project_profile(project_id)
     except ValueError:
         raise HTTPException(status_code=404, detail="Unknown project")
+
+
+@router.get("/debug/query_vector")
+async def query_vector_debug(user_id: str, project_id: str):
+    try:
+        result = get_query_vector(user_id, project_id)
+    except ValueError as exc:
+        if str(exc) == "user_not_found":
+            raise HTTPException(status_code=404, detail="Unknown user")
+        if str(exc) == "project_not_found":
+            raise HTTPException(status_code=404, detail="Unknown project")
+        raise HTTPException(status_code=400, detail="Missing role or phase data")
+    q_vector = result["q_vector"]
+    return {
+        "user_id": user_id,
+        "project_id": project_id,
+        "weights": result["weights"],
+        "role_id": result["role_id"],
+        "phase_key": result["phase_key"],
+        "q_dim": len(q_vector),
+        "q_vector": q_vector[:20],
+        "component_norms": result["component_norms"],
+        "component_top_indices": result["component_top_indices"],
+    }
