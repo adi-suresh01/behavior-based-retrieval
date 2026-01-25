@@ -62,6 +62,8 @@ def compute_urgency(text: str, reactions_json_list: List[str]) -> float:
         score += 0.35
     if "urgent" in lowered or "blocker" in lowered or "blocked" in lowered:
         score += 0.25
+    if "decision needed" in lowered or "decision" in lowered:
+        score += 0.1
     if any(phase.lower() in lowered for phase in PHASE_HINTS):
         score += 0.15
     if any("rotating_light" in r for r in reactions_json_list if r):
