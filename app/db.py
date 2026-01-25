@@ -129,6 +129,7 @@ def init_db() -> None:
             project_id TEXT PRIMARY KEY,
             name TEXT,
             current_phase TEXT,
+            channels_json TEXT,
             created_at REAL,
             updated_at REAL
         )
