@@ -24,11 +24,12 @@ def create_phase(phase_key: str, description: str) -> List[float]:
     return vector
 
 
-def create_project(project_id: str, name: str, current_phase: str) -> None:
+def create_project(project_id: str, name: str, current_phase: str, channels: Optional[List[str]] = None) -> None:
     phase = db.fetch_phase(current_phase)
     if phase is None:
         raise ValueError("phase_not_found")
-    db.upsert_project(project_id, name, current_phase)
+    channels_json = json.dumps(channels or [])
+    db.upsert_project(project_id, name, current_phase, channels_json)
 
 
 def update_project_phase(project_id: str, phase_key: str) -> None:

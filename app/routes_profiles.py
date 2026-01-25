@@ -32,6 +32,7 @@ class ProjectCreate(BaseModel):
     project_id: str
     name: str
     current_phase: str
+    channels: list[str] | None = None
 
 
 class ProjectPhaseUpdate(BaseModel):
@@ -63,7 +64,7 @@ async def create_phase_endpoint(payload: PhaseCreate):
 @router.post("/projects")
 async def create_project_endpoint(payload: ProjectCreate):
     try:
-        create_project(payload.project_id, payload.name, payload.current_phase)
+        create_project(payload.project_id, payload.name, payload.current_phase, payload.channels)
     except ValueError:
         raise HTTPException(status_code=400, detail="Unknown phase_key")
     return {"project_id": payload.project_id}
