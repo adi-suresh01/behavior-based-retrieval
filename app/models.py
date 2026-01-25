@@ -1,6 +1,6 @@
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class SlackReaction(BaseModel):
@@ -9,16 +9,23 @@ class SlackReaction(BaseModel):
 
 
 class SlackInnerEvent(BaseModel):
+    model_config = ConfigDict(extra="allow")
     type: str
-    channel: str
+    channel: Optional[str] = None
     user: Optional[str] = None
     text: Optional[str] = None
-    ts: str
+    ts: Optional[str] = None
     thread_ts: Optional[str] = None
     reactions: Optional[List[SlackReaction]] = None
+    subtype: Optional[str] = None
+    message: Optional[Dict[str, Any]] = None
+    previous_message: Optional[Dict[str, Any]] = None
+    item: Optional[Dict[str, Any]] = None
+    reaction: Optional[str] = None
 
 
 class SlackEventPayload(BaseModel):
+    model_config = ConfigDict(extra="allow")
     event_id: str
     event_time: Optional[int] = None
     event_ts: Optional[str] = None
