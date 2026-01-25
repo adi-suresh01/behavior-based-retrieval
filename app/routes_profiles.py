@@ -272,6 +272,6 @@ async def feedback_endpoint(payload: FeedbackCreate):
         "project_id": payload.project_id,
         "thread_ts": payload.thread_ts,
         "action": payload.action,
-        "update_summary": f\"Updated user vector {result['direction']} item embedding.\",
+        "update_summary": f"Updated user vector {result['direction']} item embedding.",
         "user_vector_norm": result["new_norm"],
     }
