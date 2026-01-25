@@ -6,7 +6,7 @@ import numpy as np
 
 from app import db
 from app.profiles import get_query_vector
-from app.retrieval import load_candidate_items, retrieve_top_k, cosine_sim
+from app.retrieval import load_candidate_items, retrieve_top_k
 from app.rerank import rerank_candidates
 
 ROLE_SIGNAL_KEYWORDS = ["supply", "procure", "vendor", "lead time"]
