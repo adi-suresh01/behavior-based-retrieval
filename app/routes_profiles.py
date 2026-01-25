@@ -14,7 +14,8 @@ from app.profiles import (
     update_project_phase,
     update_user_role,
 )
-from app.retrieval import load_candidate_items, retrieve_top_k
+from app.retrieval import load_candidate_items, retrieve_top_k, cosine_sim
+from app.rerank import rerank_candidates
 
 router = APIRouter()
 
@@ -168,5 +169,51 @@ async def debug_retrieve(user_id: str, project_id: str, k: int = 50, labels: str
         "user_id": user_id,
         "project_id": project_id,
         "k": k,
+        "results": results,
+    }
+
+
+@router.get("/debug/rerank")
+async def debug_rerank(user_id: str, project_id: str, n: int = 10, labels: str | None = None):
+    label_filter = [label.strip().upper() for label in labels.split(",")] if labels else []
+    try:
+        q_result = get_query_vector(user_id, project_id)
+    except ValueError as exc:
+        if str(exc) == "user_not_found":
+            raise HTTPException(status_code=404, detail="Unknown user")
+        if str(exc) == "project_not_found":
+            raise HTTPException(status_code=404, detail="Unknown project")
+        raise HTTPException(status_code=400, detail="Missing role or phase data")
+    candidates = load_candidate_items(project_id=project_id, label_filter=label_filter)
+    q_vector = np.array(q_result["q_vector"], dtype=float)
+    scored_candidates = []
+    for candidate in candidates:
+        sim = cosine_sim(q_vector, candidate["vector"])
+        scored_candidates.append({**candidate, "sim_score": sim})
+    reranked = rerank_candidates(scored_candidates, user_id, n=n)
+    results = []
+    for item in reranked:
+        results.append(
+            {
+                "thread_ts": item["thread_ts"],
+                "final_score": item["final_score"],
+                "score_breakdown": {
+                    "sim": item["sim_score"],
+                    "urgency": item["urgency"],
+                    "ownership": item["ownership"],
+                    "recency": item["recency"],
+                    "diversity_penalty": item["diversity_penalty"],
+                    "base_score": item["base_score"],
+                },
+                "force_included": item["force_included"],
+                "title": item["title"],
+                "labels": item["labels"],
+                "updated_at": item["updated_at"],
+            }
+        )
+    return {
+        "user_id": user_id,
+        "project_id": project_id,
+        "n": n,
         "results": results,
     }
