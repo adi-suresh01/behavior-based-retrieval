@@ -81,19 +81,13 @@ def retrieve_top_k(
     scored = []
     for candidate in candidates:
         score = cosine_sim(q, candidate["vector"])
-        scored.append(
-            {
-                "thread_ts": candidate["thread_ts"],
-                "score": score,
-                "urgency": candidate["urgency"],
-                "title": candidate["title"],
-                "labels": candidate["labels"],
-                "updated_at": candidate["updated_at"],
-            }
-        )
+        scored_candidate = dict(candidate)
+        scored_candidate["sim_score"] = score
+        scored_candidate["score"] = score
+        scored.append(scored_candidate)
     scored.sort(
         key=lambda item: (
-            -item["score"],
+            -item["sim_score"],
             -item["urgency"],
             -item["updated_at"],
             item["thread_ts"],
