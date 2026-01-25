@@ -347,3 +347,135 @@ def fetch_metrics() -> Iterable[sqlite3.Row]:
     with db_cursor() as cur:
         cur.execute("SELECT * FROM job_metrics")
         return cur.fetchall()
+
+
+def upsert_role(role_id: str, name: str, description: str, role_vector: str) -> None:
+    with db_cursor() as cur:
+        cur.execute(
+            """
+            INSERT INTO roles(role_id, name, description, role_vector_json, updated_at)
+            VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(role_id) DO UPDATE SET
+                name=excluded.name,
+                description=excluded.description,
+                role_vector_json=excluded.role_vector_json,
+                updated_at=excluded.updated_at
+            """,
+            (role_id, name, description, role_vector, time.time()),
+        )
+
+
+def fetch_role(role_id: str) -> Optional[sqlite3.Row]:
+    with db_cursor() as cur:
+        cur.execute("SELECT * FROM roles WHERE role_id = ?", (role_id,))
+        return cur.fetchone()
+
+
+def upsert_phase(phase_key: str, description: str, phase_vector: str) -> None:
+    with db_cursor() as cur:
+        cur.execute(
+            """
+            INSERT INTO phases(phase_key, description, phase_vector_json, updated_at)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(phase_key) DO UPDATE SET
+                description=excluded.description,
+                phase_vector_json=excluded.phase_vector_json,
+                updated_at=excluded.updated_at
+            """,
+            (phase_key, description, phase_vector, time.time()),
+        )
+
+
+def fetch_phase(phase_key: str) -> Optional[sqlite3.Row]:
+    with db_cursor() as cur:
+        cur.execute("SELECT * FROM phases WHERE phase_key = ?", (phase_key,))
+        return cur.fetchone()
+
+
+def upsert_project(project_id: str, name: str, current_phase: str) -> None:
+    now = time.time()
+    with db_cursor() as cur:
+        cur.execute(
+            """
+            INSERT INTO projects(project_id, name, current_phase, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(project_id) DO UPDATE SET
+                name=excluded.name,
+                current_phase=excluded.current_phase,
+                updated_at=excluded.updated_at
+            """,
+            (project_id, name, current_phase, now, now),
+        )
+
+
+def update_project_phase(project_id: str, phase_key: str) -> None:
+    with db_cursor() as cur:
+        cur.execute(
+            """
+            UPDATE projects SET current_phase = ?, updated_at = ? WHERE project_id = ?
+            """,
+            (phase_key, time.time(), project_id),
+        )
+
+
+def fetch_project(project_id: str) -> Optional[sqlite3.Row]:
+    with db_cursor() as cur:
+        cur.execute("SELECT * FROM projects WHERE project_id = ?", (project_id,))
+        return cur.fetchone()
+
+
+def upsert_user(user_id: str, name: str, email: Optional[str], role_id: Optional[str], user_vector: Optional[str]) -> None:
+    now = time.time()
+    with db_cursor() as cur:
+        cur.execute(
+            """
+            INSERT INTO users(user_id, name, email, role_id, user_vector_json, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(user_id) DO UPDATE SET
+                name=excluded.name,
+                email=excluded.email,
+                role_id=excluded.role_id,
+                user_vector_json=excluded.user_vector_json,
+                updated_at=excluded.updated_at
+            """,
+            (user_id, name, email, role_id, user_vector, now, now),
+        )
+
+
+def update_user_role(user_id: str, role_id: str, user_vector: Optional[str]) -> None:
+    with db_cursor() as cur:
+        cur.execute(
+            """
+            UPDATE users SET role_id = ?, user_vector_json = ?, updated_at = ? WHERE user_id = ?
+            """,
+            (role_id, user_vector, time.time(), user_id),
+        )
+
+
+def fetch_user(user_id: str) -> Optional[sqlite3.Row]:
+    with db_cursor() as cur:
+        cur.execute("SELECT * FROM users WHERE user_id = ?", (user_id,))
+        return cur.fetchone()
+
+
+def add_user_project(user_id: str, project_id: str) -> None:
+    with db_cursor() as cur:
+        cur.execute(
+            """
+            INSERT OR IGNORE INTO user_project(user_id, project_id) VALUES (?, ?)
+            """,
+            (user_id, project_id),
+        )
+
+
+def fetch_user_projects(user_id: str) -> Iterable[sqlite3.Row]:
+    with db_cursor() as cur:
+        cur.execute(
+            """
+            SELECT p.* FROM projects p
+            JOIN user_project up ON up.project_id = p.project_id
+            WHERE up.user_id = ?
+            """,
+            (user_id,),
+        )
+        return cur.fetchall()
