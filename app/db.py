@@ -245,6 +245,59 @@ def get_messages_for_thread(thread_ts: str) -> Iterable[sqlite3.Row]:
     return rows
 
 
+def fetch_message(channel: str, ts: str) -> Optional[sqlite3.Row]:
+    with db_cursor() as cur:
+        cur.execute("SELECT * FROM messages WHERE channel = ? AND ts = ?", (channel, ts))
+        return cur.fetchone()
+
+
+def update_message_text(channel: str, ts: str, text: Optional[str]) -> None:
+    with db_cursor() as cur:
+        cur.execute(
+            """
+            UPDATE messages SET text = ?, edited_at = ?, is_deleted = 0 WHERE channel = ? AND ts = ?
+            """,
+            (text, time.time(), channel, ts),
+        )
+
+
+def mark_message_deleted(channel: str, ts: str) -> None:
+    with db_cursor() as cur:
+        cur.execute(
+            """
+            UPDATE messages SET is_deleted = 1, edited_at = ? WHERE channel = ? AND ts = ?
+            """,
+            (time.time(), channel, ts),
+        )
+
+
+def update_message_reactions(channel: str, ts: str, reaction: str, delta: int) -> None:
+    row = fetch_message(channel, ts)
+    if row is None:
+        return
+    reactions_json = row["reactions_json"] or "[]"
+    try:
+        reactions = json.loads(reactions_json)
+    except json.JSONDecodeError:
+        reactions = []
+    updated = False
+    for entry in reactions:
+        if entry.get("name") == reaction:
+            entry["count"] = max(0, int(entry.get("count", 0)) + delta)
+            updated = True
+            break
+    if not updated and delta > 0:
+        reactions.append({"name": reaction, "count": 1})
+    reactions = [r for r in reactions if int(r.get("count", 0)) > 0]
+    with db_cursor() as cur:
+        cur.execute(
+            """
+            UPDATE messages SET reactions_json = ? WHERE channel = ? AND ts = ?
+            """,
+            (json.dumps(reactions), channel, ts),
+        )
+
+
 def get_thread(thread_ts: str) -> Optional[sqlite3.Row]:
     with db_cursor() as cur:
         cur.execute("SELECT * FROM threads WHERE thread_ts = ?", (thread_ts,))
