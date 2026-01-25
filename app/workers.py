@@ -10,8 +10,9 @@ from app.threading import store_message, update_thread_stats, get_thread_text
 
 async def process_event(payload: SlackEventPayload) -> None:
     event = payload.event
+    channel = event.channel
     if event.type == "message" and event.subtype in {"message_changed", "message_deleted"}:
-        channel = event.channel or (event.message or {}).get("channel") or (event.previous_message or {}).get("channel")
+        channel = channel or (event.message or {}).get("channel") or (event.previous_message or {}).get("channel")
         if event.subtype == "message_changed":
             message = event.message or {}
             ts = message.get("ts")
@@ -31,7 +32,7 @@ async def process_event(payload: SlackEventPayload) -> None:
                 return
     elif event.type in {"reaction_added", "reaction_removed"}:
         item = event.item or {}
-        channel = item.get("channel") or event.channel
+        channel = item.get("channel") or channel
         ts = item.get("ts") or event.ts
         if not channel or not ts or not event.reaction:
             return
@@ -47,12 +48,13 @@ async def process_event(payload: SlackEventPayload) -> None:
         inserted, thread_ts = store_message(event)
         if not inserted:
             return
-
-    update_thread_stats(thread_ts, event.channel or channel)
+    if not channel:
+        return
+    update_thread_stats(thread_ts, channel)
     title, labels, entities, urgency, summary = enrich_thread(thread_ts)
     db.upsert_digest_item(
         thread_ts=thread_ts,
-        channel=event.channel or channel,
+        channel=channel,
         title=title,
         labels=labels,
         entities=entities,
