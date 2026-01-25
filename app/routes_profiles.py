@@ -17,6 +17,7 @@ from app.profiles import (
 from app.retrieval import load_candidate_items, retrieve_top_k, cosine_sim
 from app.rerank import rerank_candidates
 from app.digest import build_digest
+from app.feedback import apply_feedback, ALL_ACTIONS
 
 router = APIRouter()
 
@@ -242,3 +243,35 @@ async def digest_endpoint(user_id: str, project_id: str, n: int = 10):
             raise HTTPException(status_code=404, detail="Unknown project")
         raise HTTPException(status_code=400, detail="Missing role or phase data")
     return result
+
+
+class FeedbackCreate(BaseModel):
+    user_id: str
+    project_id: str
+    thread_ts: str
+    action: str
+
+
+@router.post("/feedback")
+async def feedback_endpoint(payload: FeedbackCreate):
+    try:
+        result = apply_feedback(payload.user_id, payload.project_id, payload.thread_ts, payload.action)
+    except ValueError as exc:
+        if str(exc) == "invalid_action":
+            raise HTTPException(status_code=400, detail=f"Action must be one of: {sorted(ALL_ACTIONS)}")
+        if str(exc) == "user_not_found":
+            raise HTTPException(status_code=404, detail="Unknown user")
+        if str(exc) == "embedding_not_found":
+            raise HTTPException(status_code=404, detail="Unknown thread embedding")
+        if str(exc) == "role_not_found":
+            raise HTTPException(status_code=400, detail="Missing role for user")
+        raise HTTPException(status_code=400, detail="Invalid feedback payload")
+    return {
+        "interaction_id": result["interaction_id"],
+        "user_id": payload.user_id,
+        "project_id": payload.project_id,
+        "thread_ts": payload.thread_ts,
+        "action": payload.action,
+        "update_summary": f\"Updated user vector {result['direction']} item embedding.\",
+        "user_vector_norm": result["new_norm"],
+    }
