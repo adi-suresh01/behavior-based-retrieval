@@ -4,10 +4,10 @@ import time
 import uuid
 from typing import Any, Dict, List
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 
 from app import db
-from app.ingest import handle_slack_event, ingest_payload
+from app.ingest import ingest_payload
 from app.models import (
     DigestItemView,
     EmbeddingView,
@@ -19,10 +19,12 @@ from app.models import (
 )
 from app.queueing import QUEUES, enqueue_backfill, queue_sizes
 from app.routes_profiles import router as profiles_router
+from app.routes_slack import router as slack_router
 from app.workers import start_all_workers
 
 app = FastAPI()
 app.include_router(profiles_router)
+app.include_router(slack_router)
 
 
 @app.on_event("startup")
@@ -35,14 +37,6 @@ async def startup() -> None:
 @app.get("/health", response_model=HealthResponse)
 async def health() -> HealthResponse:
     return HealthResponse(status="ok")
-
-
-@app.post("/slack/events", response_model=IngestResult)
-async def slack_events(request: Request, payload: SlackEventPayload) -> IngestResult:
-    raw_body = await request.body()
-    request.scope["raw_body"] = raw_body
-    inserted, event_id = handle_slack_event(request, payload)
-    return IngestResult(status="queued" if inserted else "duplicate", event_id=event_id)
 
 
 @app.post("/seed_mock")
