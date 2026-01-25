@@ -161,6 +161,8 @@ def get_query_vector(user_id: str, project_id: str) -> Dict:
     if role is None:
         raise ValueError("role_not_found")
     role_vec = _parse_vector(role["role_vector_json"])
+    if role_vec is None:
+        raise ValueError("role_vector_missing")
     user_vec = _parse_vector(user["user_vector_json"])
     phase_key = project["current_phase"]
     phase = db.fetch_phase(phase_key) if phase_key else None
