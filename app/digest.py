@@ -34,11 +34,7 @@ def build_digest(user_id: str, project_id: str, n: int = 10) -> Dict[str, Any]:
     q_result = get_query_vector(user_id, project_id)
     q_vector = np.array(q_result["q_vector"], dtype=float)
     candidates = load_candidate_items(project_id=project_id)
-    scored_candidates = []
-    for candidate in candidates:
-        sim = cosine_sim(q_vector, candidate["vector"])
-        scored_candidates.append({**candidate, "sim_score": sim})
-    top_k = retrieve_top_k(q_vector, scored_candidates, k=50)
+    top_k = retrieve_top_k(q_vector, candidates, k=50)
     ranked = rerank_candidates(top_k, user_id, n=n)
 
     role = db.fetch_role(q_result["role_id"]) if q_result.get("role_id") else None
