@@ -24,6 +24,14 @@ def compute_embedding(text: str, dim: int = DEFAULT_DIM) -> List[float]:
     return [v / norm for v in vector]
 
 
+def normalize(vector: Iterable[float]) -> List[float]:
+    values = list(vector)
+    norm = math.sqrt(sum(v * v for v in values))
+    if norm == 0:
+        return values
+    return [v / norm for v in values]
+
+
 def embed_and_store(thread_ts: str, text: str, store_fn) -> None:
     vector = compute_embedding(text)
     store_fn(thread_ts, len(vector), vector)

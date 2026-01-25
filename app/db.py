@@ -107,6 +107,50 @@ def init_db() -> None:
             last_processed_at REAL
         )
         """,
+        """
+        CREATE TABLE IF NOT EXISTS roles (
+            role_id TEXT PRIMARY KEY,
+            name TEXT,
+            description TEXT,
+            role_vector_json TEXT,
+            updated_at REAL
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS phases (
+            phase_key TEXT PRIMARY KEY,
+            description TEXT,
+            phase_vector_json TEXT,
+            updated_at REAL
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS projects (
+            project_id TEXT PRIMARY KEY,
+            name TEXT,
+            current_phase TEXT,
+            created_at REAL,
+            updated_at REAL
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS users (
+            user_id TEXT PRIMARY KEY,
+            name TEXT,
+            email TEXT,
+            role_id TEXT,
+            user_vector_json TEXT,
+            created_at REAL,
+            updated_at REAL
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS user_project (
+            user_id TEXT,
+            project_id TEXT,
+            PRIMARY KEY (user_id, project_id)
+        )
+        """,
     ]
     with db_cursor() as cur:
         for stmt in schema_statements:
