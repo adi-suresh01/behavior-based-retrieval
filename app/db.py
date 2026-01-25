@@ -64,6 +64,8 @@ def init_db() -> None:
             user TEXT,
             text TEXT,
             reactions_json TEXT,
+            is_deleted INTEGER DEFAULT 0,
+            edited_at REAL,
             created_at REAL,
             PRIMARY KEY (channel, ts)
         )
