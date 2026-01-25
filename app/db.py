@@ -227,10 +227,10 @@ def insert_message(
         cur.execute(
             """
             INSERT OR IGNORE INTO messages
-            (channel, ts, thread_ts, user, text, reactions_json, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            (channel, ts, thread_ts, user, text, reactions_json, is_deleted, edited_at, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
-            (channel, ts, thread_ts, user, text, reactions_json, time.time()),
+            (channel, ts, thread_ts, user, text, reactions_json, 0, None, time.time()),
         )
         return cur.rowcount == 1
 
