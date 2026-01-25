@@ -9,14 +9,50 @@ from app.threading import store_message, update_thread_stats, get_thread_text
 
 
 async def process_event(payload: SlackEventPayload) -> None:
-    inserted, thread_ts = store_message(payload.event)
-    if not inserted:
-        return
-    update_thread_stats(thread_ts, payload.event.channel)
+    event = payload.event
+    if event.type == "message" and event.subtype in {"message_changed", "message_deleted"}:
+        channel = event.channel or (event.message or {}).get("channel") or (event.previous_message or {}).get("channel")
+        if event.subtype == "message_changed":
+            message = event.message or {}
+            ts = message.get("ts")
+            text = message.get("text")
+            thread_ts = message.get("thread_ts") or ts
+            if channel and ts:
+                db.update_message_text(channel, ts, text)
+            else:
+                return
+        else:
+            message = event.previous_message or event.message or {}
+            ts = message.get("ts") or getattr(event, "deleted_ts", None)
+            thread_ts = message.get("thread_ts") or ts
+            if channel and ts:
+                db.mark_message_deleted(channel, ts)
+            else:
+                return
+    elif event.type in {"reaction_added", "reaction_removed"}:
+        item = event.item or {}
+        channel = item.get("channel") or event.channel
+        ts = item.get("ts") or event.ts
+        if not channel or not ts or not event.reaction:
+            return
+        delta = 1 if event.type == "reaction_added" else -1
+        db.update_message_reactions(channel, ts, event.reaction, delta)
+        message = db.fetch_message(channel, ts)
+        if message is None:
+            return
+        thread_ts = message["thread_ts"]
+    else:
+        if event.channel is None or event.ts is None:
+            return
+        inserted, thread_ts = store_message(event)
+        if not inserted:
+            return
+
+    update_thread_stats(thread_ts, event.channel or channel)
     title, labels, entities, urgency, summary = enrich_thread(thread_ts)
     db.upsert_digest_item(
         thread_ts=thread_ts,
-        channel=payload.event.channel,
+        channel=event.channel or channel,
         title=title,
         labels=labels,
         entities=entities,
