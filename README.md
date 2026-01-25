@@ -85,6 +85,23 @@ curl "http://localhost:8000/debug/rerank?user_id=user-1&project_id=proj-1&n=10"
 curl "http://localhost:8000/digest?user_id=user-1&project_id=proj-1&n=10"
 ```
 
+## Feedback and Online Learning
+
+Feedback updates the user embedding in-place using a simple online rule:
+
+- positive actions (`click`, `save`, `thumbs_up`) pull the user vector toward the item embedding
+- negative actions (`thumbs_down`, `dismiss`) push it away
+
+Over time this changes retrieval and reranking for the user.
+
+Example:
+
+```bash
+curl -X POST http://localhost:8000/feedback \
+  -H "Content-Type: application/json" \
+  -d '{"user_id":"user-1","project_id":"proj-1","thread_ts":"<thread_ts>","action":"click"}'
+```
+
 Send a Slack-style event (signature verification disabled):
 
 ```bash
