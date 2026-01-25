@@ -85,6 +85,27 @@ curl "http://localhost:8000/debug/rerank?user_id=user-1&project_id=proj-1&n=10"
 curl "http://localhost:8000/digest?user_id=user-1&project_id=proj-1&n=10"
 ```
 
+## Slack App Setup
+
+1. Create a Slack app and enable Event Subscriptions.
+2. Set the Request URL to `https://<your-host>/slack/events`.
+3. Add OAuth scopes (example): `commands`, `chat:write`, `channels:read`.
+4. Set Redirect URLs to `https://<your-host>/slack/oauth_redirect`.
+5. Configure env vars:
+
+```bash
+export SLACK_CLIENT_ID=...
+export SLACK_CLIENT_SECRET=...
+export SLACK_SIGNING_SECRET=...
+export SLACK_REDIRECT_URI=https://<your-host>/slack/oauth_redirect
+```
+
+Install flow:
+
+```bash
+open "http://localhost:8000/slack/install"
+```
+
 ## Feedback and Online Learning
 
 Feedback updates the user embedding in-place using a simple online rule:
