@@ -22,7 +22,7 @@ def _reaction_count(reactions_json: str) -> int:
 def _participants_from_messages(messages: Iterable[dict]) -> List[str]:
     participants = set()
     for msg in messages:
-        if msg.get("user"):
+        if msg.get("user") and not msg.get("is_deleted"):
             participants.add(msg["user"])
     return sorted(participants)
 
@@ -62,9 +62,10 @@ def update_thread_stats(thread_ts: str, channel: str) -> None:
         message_dicts.append(msg_dict)
         ts_val = float(msg_dict.get("ts") or 0)
         last_activity = max(last_activity, ts_val)
-        if msg_dict.get("ts") != thread_ts:
-            reply_count += 1
-        reaction_count += _reaction_count(msg_dict.get("reactions_json"))
+        if not msg_dict.get("is_deleted"):
+            if msg_dict.get("ts") != thread_ts:
+                reply_count += 1
+            reaction_count += _reaction_count(msg_dict.get("reactions_json"))
     participants = _participants_from_messages(message_dicts)
     db.upsert_thread(
         thread_ts=thread_ts,
@@ -83,6 +84,6 @@ def get_thread_text(thread_ts: str) -> Tuple[str, List[Dict]]:
     message_dicts = [dict(msg) for msg in messages]
     text_parts = []
     for msg in message_dicts:
-        if msg.get("text"):
+        if msg.get("text") and not msg.get("is_deleted"):
             text_parts.append(msg["text"])
     return "\n".join(text_parts), message_dicts
