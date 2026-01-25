@@ -553,3 +553,30 @@ def update_user_vector(user_id: str, user_vector_json: str) -> None:
             """,
             (user_vector_json, time.time(), user_id),
         )
+
+
+def upsert_slack_workspace(
+    team_id: str,
+    access_token: str,
+    bot_user_id: str,
+    scopes_json: str,
+) -> None:
+    with db_cursor() as cur:
+        cur.execute(
+            """
+            INSERT INTO slack_workspaces(team_id, access_token, bot_user_id, installed_at, scopes_json)
+            VALUES (?, ?, ?, ?, ?)
+            ON CONFLICT(team_id) DO UPDATE SET
+                access_token=excluded.access_token,
+                bot_user_id=excluded.bot_user_id,
+                installed_at=excluded.installed_at,
+                scopes_json=excluded.scopes_json
+            """,
+            (team_id, access_token, bot_user_id, time.time(), scopes_json),
+        )
+
+
+def fetch_slack_workspace(team_id: str) -> Optional[sqlite3.Row]:
+    with db_cursor() as cur:
+        cur.execute("SELECT * FROM slack_workspaces WHERE team_id = ?", (team_id,))
+        return cur.fetchone()
