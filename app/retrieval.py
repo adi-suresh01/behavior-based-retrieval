@@ -25,6 +25,8 @@ def load_candidate_items(
 ) -> List[Dict[str, Any]]:
     if project_id:
         channels = _load_project_channels(project_id)
+        if channels is None:
+            return []
     if since_ts is None:
         window_hours = float(os.getenv("RETRIEVAL_WINDOW_HOURS", "24"))
         since_ts = time.time() - window_hours * 3600
