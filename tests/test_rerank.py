@@ -44,8 +44,9 @@ def make_payload(text: str, thread_ts: str, ts: str, channel: str = "C001", user
 async def test_rerank_must_include_blocker():
     create_role("role-1", "PM", "Owns delivery timelines and decisions")
     create_phase("EVT", "Engineering validation testing phase")
-    create_project("proj-1", "Alpha", "EVT", channels=["C001"])
+    create_project("proj-1", "Alpha", "EVT")
     create_user("user-1", "Ari", "role-1")
+    db.add_project_channel("proj-1", "C001")
 
     base_ts = str(time.time())
     urgent_payload = make_payload(
@@ -78,8 +79,9 @@ async def test_rerank_must_include_blocker():
 async def test_rerank_deterministic_order():
     create_role("role-1", "PM", "Owns delivery timelines and decisions")
     create_phase("EVT", "Engineering validation testing phase")
-    create_project("proj-1", "Alpha", "EVT", channels=["C001"])
+    create_project("proj-1", "Alpha", "EVT")
     create_user("user-1", "Ari", "role-1")
+    db.add_project_channel("proj-1", "C001")
 
     base_ts = str(time.time())
     first_ts = str(float(base_ts) + 0.01)
