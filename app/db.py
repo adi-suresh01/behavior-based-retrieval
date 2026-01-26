@@ -724,3 +724,68 @@ def fetch_user_channels(user_id: str) -> Iterable[sqlite3.Row]:
             (user_id,),
         )
         return cur.fetchall()
+
+
+def insert_schedule(
+    schedule_id: str,
+    team_id: str,
+    project_id: str,
+    user_id: str,
+    cron_json: str,
+    is_enabled: int,
+) -> None:
+    with db_cursor() as cur:
+        cur.execute(
+            """
+            INSERT INTO digest_schedules(schedule_id, team_id, project_id, user_id, cron_json, is_enabled, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (schedule_id, team_id, project_id, user_id, cron_json, is_enabled, time.time()),
+        )
+
+
+def fetch_schedules() -> Iterable[sqlite3.Row]:
+    with db_cursor() as cur:
+        cur.execute("SELECT * FROM digest_schedules")
+        return cur.fetchall()
+
+
+def fetch_delivery_by_digest(digest_id: str) -> Optional[sqlite3.Row]:
+    with db_cursor() as cur:
+        cur.execute("SELECT * FROM digest_deliveries WHERE digest_id = ?", (digest_id,))
+        return cur.fetchone()
+
+
+def insert_delivery(
+    delivery_id: str,
+    digest_id: str,
+    team_id: str,
+    user_id: str,
+    status: str,
+    slack_ts: Optional[str],
+    error: Optional[str],
+) -> None:
+    with db_cursor() as cur:
+        cur.execute(
+            """
+            INSERT INTO digest_deliveries(delivery_id, digest_id, team_id, user_id, delivered_at, status, slack_ts, error)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (delivery_id, digest_id, team_id, user_id, time.time(), status, slack_ts, error),
+        )
+
+
+def fetch_latest_delivery_for_schedule(team_id: str, project_id: str, user_id: str, now_utc: float, tz_name: str) -> Optional[sqlite3.Row]:
+    # Find latest delivery for user/project/team by digest join on digests table
+    with db_cursor() as cur:
+        cur.execute(
+            """
+            SELECT dd.* FROM digest_deliveries dd
+            JOIN digests d ON d.digest_id = dd.digest_id
+            WHERE dd.team_id = ? AND dd.user_id = ? AND d.project_id = ?
+            ORDER BY dd.delivered_at DESC
+            LIMIT 1
+            """,
+            (team_id, user_id, project_id),
+        )
+        return cur.fetchone()
