@@ -23,8 +23,13 @@ def _is_due(schedule_row, now_utc: float) -> bool:
     now = dt.strftime("%H:%M")
     if now != time_of_day:
         return False
-    last_delivery = db.fetch_latest_delivery_for_schedule(schedule_row["team_id"], schedule_row["project_id"], schedule_row["user_id"], now_utc, tz_name)
-    return last_delivery is None
+    last_delivery = db.fetch_latest_delivery_for_schedule(
+        schedule_row["team_id"], schedule_row["project_id"], schedule_row["user_id"], now_utc, tz_name
+    )
+    if last_delivery is None:
+        return True
+    last_dt = datetime.fromtimestamp(last_delivery["delivered_at"], tz=timezone.utc).astimezone(tz)
+    return last_dt.date() != dt.date()
 
 
 async def scheduler_loop(stop_event: asyncio.Event) -> None:
