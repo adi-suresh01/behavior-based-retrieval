@@ -31,13 +31,17 @@ def _why_shown(item: Dict[str, Any], role_description: str, phase_key: str | Non
 
 
 def build_digest(user_id: str, project_id: str, n: int = 10) -> Dict[str, Any]:
-    q_result = get_query_vector(user_id, project_id)
     project_channels = [row["channel_id"] for row in db.fetch_project_channels(project_id)]
     if not project_channels:
         raise ValueError("access_denied")
+    if db.fetch_user(user_id) is None:
+        raise ValueError("user_not_found")
+    if db.fetch_project(project_id) is None:
+        raise ValueError("project_not_found")
     user_channels = {row["channel_id"] for row in db.fetch_user_channels(user_id)}
     if not user_channels.issuperset(project_channels):
         raise ValueError("access_denied")
+    q_result = get_query_vector(user_id, project_id)
     q_vector = np.array(q_result["q_vector"], dtype=float)
     candidates = load_candidate_items(project_id=project_id)
     top_k = retrieve_top_k(q_vector, candidates, k=50)
