@@ -659,3 +659,45 @@ def fetch_slack_workspace(team_id: str) -> Optional[sqlite3.Row]:
     with db_cursor() as cur:
         cur.execute("SELECT * FROM slack_workspaces WHERE team_id = ?", (team_id,))
         return cur.fetchone()
+
+
+def add_project_channel(project_id: str, channel_id: str) -> None:
+    with db_cursor() as cur:
+        cur.execute(
+            """
+            INSERT OR IGNORE INTO project_channels(project_id, channel_id) VALUES (?, ?)
+            """,
+            (project_id, channel_id),
+        )
+
+
+def add_user_channel(user_id: str, channel_id: str) -> None:
+    with db_cursor() as cur:
+        cur.execute(
+            """
+            INSERT OR IGNORE INTO user_channels(user_id, channel_id) VALUES (?, ?)
+            """,
+            (user_id, channel_id),
+        )
+
+
+def fetch_project_channels(project_id: str) -> Iterable[sqlite3.Row]:
+    with db_cursor() as cur:
+        cur.execute(
+            """
+            SELECT channel_id FROM project_channels WHERE project_id = ?
+            """,
+            (project_id,),
+        )
+        return cur.fetchall()
+
+
+def fetch_user_channels(user_id: str) -> Iterable[sqlite3.Row]:
+    with db_cursor() as cur:
+        cur.execute(
+            """
+            SELECT channel_id FROM user_channels WHERE user_id = ?
+            """,
+            (user_id,),
+        )
+        return cur.fetchall()
