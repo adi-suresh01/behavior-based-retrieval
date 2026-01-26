@@ -57,8 +57,9 @@ def seed_carbon_thread():
 async def test_retrieval_returns_thread():
     create_role("role-1", "PM", "Owns delivery timelines and decisions")
     create_phase("EVT", "Engineering validation testing phase")
-    create_project("proj-1", "Alpha", "EVT", channels=["C001"])
+    create_project("proj-1", "Alpha", "EVT")
     create_user("user-1", "Ari", "role-1")
+    db.add_project_channel("proj-1", "C001")
 
     for payload in seed_carbon_thread():
         await process_event(payload)
@@ -73,8 +74,9 @@ async def test_retrieval_returns_thread():
 async def test_retrieval_tiebreaks_deterministically():
     create_role("role-1", "PM", "Owns delivery timelines and decisions")
     create_phase("EVT", "Engineering validation testing phase")
-    create_project("proj-1", "Alpha", "EVT", channels=["C001"])
+    create_project("proj-1", "Alpha", "EVT")
     create_user("user-1", "Ari", "role-1")
+    db.add_project_channel("proj-1", "C001")
 
     base_ts = str(time.time())
     messages = [
