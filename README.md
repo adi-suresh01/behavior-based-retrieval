@@ -63,6 +63,10 @@ curl -X POST http://localhost:8000/projects \
   -H "Content-Type: application/json" \
   -d '{"project_id":"proj-1","name":"Alpha","current_phase":"EVT"}'
 
+curl -X POST http://localhost:8000/projects/proj-1/channels \
+  -H "Content-Type: application/json" \
+  -d '{"channel_id":"C001"}'
+
 curl -X PATCH http://localhost:8000/projects/proj-1/phase \
   -H "Content-Type: application/json" \
   -d '{"phase_key":"EVT"}'
@@ -70,6 +74,10 @@ curl -X PATCH http://localhost:8000/projects/proj-1/phase \
 curl -X POST http://localhost:8000/users \
   -H "Content-Type: application/json" \
   -d '{"user_id":"user-1","name":"Ari","role_id":"role-pm"}'
+
+curl -X POST http://localhost:8000/users/user-1/channels \
+  -H "Content-Type: application/json" \
+  -d '{"channel_id":"C001"}'
 
 curl -X PATCH http://localhost:8000/users/user-1/role \
   -H "Content-Type: application/json" \
