@@ -1,7 +1,7 @@
 import asyncio
 import json
 import time
-from typing import Optional
+from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
 from app import db
@@ -19,10 +19,8 @@ def _is_due(schedule_row, now_utc: float) -> bool:
         tz = ZoneInfo(tz_name)
     except Exception:
         tz = ZoneInfo("UTC")
-    now = time.strftime("%H:%M", time.localtime(now_utc))
-    if tz_name != "UTC":
-        local = time.localtime(now_utc)
-        now = time.strftime("%H:%M", time.localtime(now_utc + (tz.utcoffset(None).total_seconds() if tz.utcoffset(None) else 0)))
+    dt = datetime.fromtimestamp(now_utc, tz=timezone.utc).astimezone(tz)
+    now = dt.strftime("%H:%M")
     if now != time_of_day:
         return False
     last_delivery = db.fetch_latest_delivery_for_schedule(schedule_row["team_id"], schedule_row["project_id"], schedule_row["user_id"], now_utc, tz_name)
