@@ -196,6 +196,29 @@ def init_db() -> None:
             PRIMARY KEY (user_id, channel_id)
         )
         """,
+        """
+        CREATE TABLE IF NOT EXISTS digest_schedules (
+            schedule_id TEXT PRIMARY KEY,
+            team_id TEXT,
+            project_id TEXT,
+            user_id TEXT,
+            cron_json TEXT,
+            is_enabled INTEGER,
+            created_at REAL
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS digest_deliveries (
+            delivery_id TEXT PRIMARY KEY,
+            digest_id TEXT,
+            team_id TEXT,
+            user_id TEXT,
+            delivered_at REAL,
+            status TEXT,
+            slack_ts TEXT,
+            error TEXT
+        )
+        """,
     ]
     with db_cursor() as cur:
         for stmt in schema_statements:
