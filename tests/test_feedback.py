@@ -58,8 +58,9 @@ def get_item_vector(thread_ts: str):
 async def test_positive_feedback_moves_closer():
     create_role("role-1", "PM", "Owns delivery timelines and decisions")
     create_phase("EVT", "Engineering validation testing phase")
-    create_project("proj-1", "Alpha", "EVT", channels=["C001"])
+    create_project("proj-1", "Alpha", "EVT")
     create_user("user-1", "Ari", "role-1")
+    db.add_project_channel("proj-1", "C001")
 
     base_ts = str(time.time())
     await process_event(make_payload("Decision needed", thread_ts=base_ts, ts=base_ts))
@@ -78,8 +79,9 @@ async def test_positive_feedback_moves_closer():
 async def test_negative_feedback_moves_away():
     create_role("role-1", "PM", "Owns delivery timelines and decisions")
     create_phase("EVT", "Engineering validation testing phase")
-    create_project("proj-1", "Alpha", "EVT", channels=["C001"])
+    create_project("proj-1", "Alpha", "EVT")
     create_user("user-1", "Ari", "role-1")
+    db.add_project_channel("proj-1", "C001")
 
     base_ts = str(time.time())
     await process_event(make_payload("Decision needed", thread_ts=base_ts, ts=base_ts))
@@ -98,8 +100,9 @@ async def test_negative_feedback_moves_away():
 async def test_query_vector_changes_after_feedback():
     create_role("role-1", "PM", "Owns delivery timelines and decisions")
     create_phase("EVT", "Engineering validation testing phase")
-    create_project("proj-1", "Alpha", "EVT", channels=["C001"])
+    create_project("proj-1", "Alpha", "EVT")
     create_user("user-1", "Ari", "role-1")
+    db.add_project_channel("proj-1", "C001")
 
     base_ts = str(time.time())
     await process_event(make_payload("Decision needed", thread_ts=base_ts, ts=base_ts))
