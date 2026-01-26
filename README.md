@@ -93,6 +93,19 @@ curl "http://localhost:8000/debug/rerank?user_id=user-1&project_id=proj-1&n=10"
 curl "http://localhost:8000/digest?user_id=user-1&project_id=proj-1&n=10"
 ```
 
+## Scheduling
+
+Create a daily schedule and run it manually:
+
+```bash
+curl -X POST http://localhost:8000/schedules \
+  -H "Content-Type: application/json" \
+  -d '{"team_id":"T001","project_id":"proj-1","user_id":"user-1","time_of_day":"09:00","timezone":"UTC"}'
+
+curl http://localhost:8000/schedules
+curl -X POST http://localhost:8000/schedules/<schedule_id>/run_now
+```
+
 ## Slack App Setup
 
 1. Create a Slack app and enable Event Subscriptions.
