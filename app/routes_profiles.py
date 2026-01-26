@@ -19,6 +19,7 @@ from app.retrieval import load_candidate_items, retrieve_top_k, cosine_sim
 from app.rerank import rerank_candidates
 from app.digest import build_digest
 from app.feedback import apply_feedback, ALL_ACTIONS
+from app.delivery import deliver_digest
 
 router = APIRouter()
 
