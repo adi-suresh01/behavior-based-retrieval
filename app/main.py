@@ -21,6 +21,7 @@ from app.queueing import QUEUES, enqueue_backfill, queue_sizes
 from app.routes_profiles import router as profiles_router
 from app.routes_slack import router as slack_router
 from app.workers import start_all_workers
+from app.scheduling import scheduler_loop
 
 app = FastAPI()
 app.include_router(profiles_router)
@@ -32,6 +33,8 @@ async def startup() -> None:
     db.init_db()
     loop = app.state.loop = asyncio.get_event_loop()
     start_all_workers(loop, QUEUES)
+    app.state.scheduler_stop = asyncio.Event()
+    app.state.scheduler_task = loop.create_task(scheduler_loop(app.state.scheduler_stop))
 
 
 @app.get("/health", response_model=HealthResponse)
