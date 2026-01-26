@@ -12,10 +12,8 @@ def _load_project_channels(project_id: str) -> Optional[List[str]]:
     project = db.fetch_project(project_id)
     if project is None:
         raise ValueError("project_not_found")
-    raw = project["channels_json"]
-    if not raw:
-        return None
-    channels = json.loads(raw)
+    rows = db.fetch_project_channels(project_id)
+    channels = [row["channel_id"] for row in rows]
     return channels or None
 
 
