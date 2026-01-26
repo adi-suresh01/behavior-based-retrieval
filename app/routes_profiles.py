@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 import numpy as np
 from pydantic import BaseModel
 
+from app import db
 from app.profiles import (
     add_user_to_project,
     create_phase,
