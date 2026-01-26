@@ -113,6 +113,37 @@ async def join_user_project_endpoint(user_id: str, project_id: str):
     return {"user_id": user_id, "project_id": project_id}
 
 
+class ChannelMapping(BaseModel):
+    channel_id: str
+
+
+@router.post("/projects/{project_id}/channels")
+async def add_project_channel_endpoint(project_id: str, payload: ChannelMapping):
+    project = db.fetch_project(project_id)
+    if project is None:
+        raise HTTPException(status_code=404, detail="Unknown project")
+    db.add_project_channel(project_id, payload.channel_id)
+    return {"project_id": project_id, "channel_id": payload.channel_id}
+
+
+@router.post("/users/{user_id}/channels")
+async def add_user_channel_endpoint(user_id: str, payload: ChannelMapping):
+    user = db.fetch_user(user_id)
+    if user is None:
+        raise HTTPException(status_code=404, detail="Unknown user")
+    db.add_user_channel(user_id, payload.channel_id)
+    return {"user_id": user_id, "channel_id": payload.channel_id}
+
+
+@router.get("/projects/{project_id}/channels")
+async def list_project_channels_endpoint(project_id: str):
+    project = db.fetch_project(project_id)
+    if project is None:
+        raise HTTPException(status_code=404, detail="Unknown project")
+    channels = [row["channel_id"] for row in db.fetch_project_channels(project_id)]
+    return {"project_id": project_id, "channels": channels}
+
+
 @router.get("/profiles/users/{user_id}")
 async def user_profile_endpoint(user_id: str):
     try:
