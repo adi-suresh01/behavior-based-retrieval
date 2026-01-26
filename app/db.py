@@ -182,6 +182,20 @@ def init_db() -> None:
             scopes_json TEXT
         )
         """,
+        """
+        CREATE TABLE IF NOT EXISTS project_channels (
+            project_id TEXT,
+            channel_id TEXT,
+            PRIMARY KEY (project_id, channel_id)
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS user_channels (
+            user_id TEXT,
+            channel_id TEXT,
+            PRIMARY KEY (user_id, channel_id)
+        )
+        """,
     ]
     with db_cursor() as cur:
         for stmt in schema_statements:
