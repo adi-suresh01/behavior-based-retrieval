@@ -267,6 +267,18 @@ async def debug_rerank(user_id: str, project_id: str, n: int = 10, labels: str |
 
 @router.get("/digest")
 async def digest_endpoint(user_id: str, project_id: str, n: int = 10):
+    user = db.fetch_user(user_id)
+    if user is None:
+        raise HTTPException(status_code=404, detail="Unknown user")
+    project = db.fetch_project(project_id)
+    if project is None:
+        raise HTTPException(status_code=404, detail="Unknown project")
+    project_channels = [row["channel_id"] for row in db.fetch_project_channels(project_id)]
+    if not project_channels:
+        raise HTTPException(status_code=403, detail="User lacks channel access")
+    user_channels = {row["channel_id"] for row in db.fetch_user_channels(user_id)}
+    if not user_channels.issuperset(project_channels):
+        raise HTTPException(status_code=403, detail="User lacks channel access")
     try:
         result = build_digest(user_id, project_id, n=n)
     except ValueError as exc:
@@ -274,6 +286,8 @@ async def digest_endpoint(user_id: str, project_id: str, n: int = 10):
             raise HTTPException(status_code=404, detail="Unknown user")
         if str(exc) == "project_not_found":
             raise HTTPException(status_code=404, detail="Unknown project")
+        if str(exc) == "access_denied":
+            raise HTTPException(status_code=403, detail="User lacks channel access")
         raise HTTPException(status_code=400, detail="Missing role or phase data")
     return result
 
