@@ -169,6 +169,8 @@ async def query_vector_debug(user_id: str, project_id: str):
             raise HTTPException(status_code=404, detail="Unknown user")
         if str(exc) == "project_not_found":
             raise HTTPException(status_code=404, detail="Unknown project")
+        if str(exc) == "access_denied":
+            raise HTTPException(status_code=403, detail="User lacks channel access")
         raise HTTPException(status_code=400, detail="Missing role or phase data")
     q_vector = result["q_vector"]
     return {

@@ -31,6 +31,12 @@ def _why_shown(item: Dict[str, Any], role_description: str, phase_key: str | Non
 
 
 def build_digest(user_id: str, project_id: str, n: int = 10) -> Dict[str, Any]:
+    project_channels = [row["channel_id"] for row in db.fetch_project_channels(project_id)]
+    if not project_channels:
+        raise ValueError("access_denied")
+    user_channels = {row["channel_id"] for row in db.fetch_user_channels(user_id)}
+    if not user_channels.issuperset(project_channels):
+        raise ValueError("access_denied")
     q_result = get_query_vector(user_id, project_id)
     q_vector = np.array(q_result["q_vector"], dtype=float)
     candidates = load_candidate_items(project_id=project_id)
