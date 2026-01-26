@@ -300,6 +300,56 @@ class FeedbackCreate(BaseModel):
     action: str
 
 
+class ScheduleCreate(BaseModel):
+    team_id: str
+    project_id: str
+    user_id: str
+    time_of_day: str
+    timezone: str
+
+
+@router.post("/schedules")
+async def create_schedule_endpoint(payload: ScheduleCreate):
+    schedule_id = f"sched-{uuid.uuid4().hex}"
+    cron_json = json.dumps({"time_of_day": payload.time_of_day, "timezone": payload.timezone})
+    db.insert_schedule(schedule_id, payload.team_id, payload.project_id, payload.user_id, cron_json, 1)
+    return {"schedule_id": schedule_id}
+
+
+@router.get("/schedules")
+async def list_schedules_endpoint():
+    rows = db.fetch_schedules()
+    result = []
+    for row in rows:
+        result.append(
+            {
+                "schedule_id": row["schedule_id"],
+                "team_id": row["team_id"],
+                "project_id": row["project_id"],
+                "user_id": row["user_id"],
+                "cron": json.loads(row["cron_json"]),
+                "is_enabled": bool(row["is_enabled"]),
+            }
+        )
+    return result
+
+
+@router.post("/schedules/{schedule_id}/run_now")
+async def run_schedule_now(schedule_id: str):
+    schedules = db.fetch_schedules()
+    schedule = next((row for row in schedules if row["schedule_id"] == schedule_id), None)
+    if schedule is None:
+        raise HTTPException(status_code=404, detail="Unknown schedule")
+    last_delivery = db.fetch_latest_delivery_for_schedule(
+        schedule["team_id"], schedule["project_id"], schedule["user_id"], time.time(), "UTC"
+    )
+    if last_delivery and time.time() - last_delivery["delivered_at"] < 300:
+        return {"status": "already_delivered", "schedule_id": schedule_id}
+    digest = build_digest(schedule["user_id"], schedule["project_id"], n=10)
+    delivery = await deliver_digest(digest["digest_id"], schedule["team_id"], schedule["user_id"], digest["items"])
+    return {"status": delivery["status"], "schedule_id": schedule_id, "digest_id": digest["digest_id"]}
+
+
 @router.post("/feedback")
 async def feedback_endpoint(payload: FeedbackCreate):
     try:
