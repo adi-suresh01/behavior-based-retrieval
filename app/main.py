@@ -19,6 +19,7 @@ from app.models import (
 )
 from app.queueing import QUEUES, enqueue_backfill, queue_sizes
 from app.routes_profiles import router as profiles_router
+from app.routes_sim import router as sim_router
 from app.routes_slack import router as slack_router
 from app.workers import start_all_workers
 from app.scheduling import scheduler_loop
@@ -26,6 +27,7 @@ from app.scheduling import scheduler_loop
 app = FastAPI()
 app.include_router(profiles_router)
 app.include_router(slack_router)
+app.include_router(sim_router)
 
 
 @app.on_event("startup")
