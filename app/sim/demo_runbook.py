@@ -119,7 +119,7 @@ async def main() -> None:
     print(_format_digest(digest_pm["items"]))
 
     # Phase change
-    await client.post("/projects/proj-drone/phase", {"phase_key": "DVT"})
+    await client.patch("/projects/proj-drone/phase", {"phase_key": "DVT"})
     digest_me_dvt = await client.get("/digest", {"user_id": "U_MAYA", "project_id": "proj-drone", "n": 5})
     digest_supply_dvt = await client.get("/digest", {"user_id": "U_SAM", "project_id": "proj-drone", "n": 5})
     print("\n=== Phase Change: EVT -> DVT ===")

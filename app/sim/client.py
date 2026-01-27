@@ -20,6 +20,12 @@ class SimClient:
             response.raise_for_status()
             return response.json()
 
+    async def patch(self, path: str, payload: Dict) -> Dict:
+        async with httpx.AsyncClient(timeout=10) as client:
+            response = await client.patch(f"{self.base_url}{path}", json=payload)
+            response.raise_for_status()
+            return response.json()
+
     async def get(self, path: str, params: Optional[Dict] = None) -> Dict:
         async with httpx.AsyncClient(timeout=10) as client:
             response = await client.get(f"{self.base_url}{path}", params=params)
