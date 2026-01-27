@@ -1,4 +1,5 @@
 import asyncio
+import json
 import os
 import time
 from typing import Dict, List
@@ -135,7 +136,6 @@ async def main() -> None:
 
     db.init_db()
     user_before = db.fetch_user("U_SAM")
-    vec_before = db.fetch_embedding(supply_thread)
     v_pos = db.fetch_embedding(supply_thread)
     v_neg = db.fetch_embedding(rf_thread)
 
