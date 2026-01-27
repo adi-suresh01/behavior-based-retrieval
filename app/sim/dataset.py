@@ -25,9 +25,11 @@ def carbon_fiber_demo(clock: SimClock) -> List[Dict]:
     events: List[Dict] = []
     idx = 0
 
-    def emit_message(channel: str, user: str, text: str, thread_ts: float) -> None:
+    def emit_message(channel: str, user: str, text: str, thread_ts: float | None) -> float:
         nonlocal idx
         ts = clock.tick()
+        if thread_ts is None:
+            thread_ts = ts
         events.append(
             {
                 "event_id": _event_id("M", idx),
@@ -45,6 +47,7 @@ def carbon_fiber_demo(clock: SimClock) -> List[Dict]:
             }
         )
         idx += 1
+        return thread_ts
 
     def emit_reaction(channel: str, reaction: str, item_ts: float) -> None:
         nonlocal idx
@@ -90,12 +93,11 @@ def carbon_fiber_demo(clock: SimClock) -> List[Dict]:
         idx += 1
 
     # Thread 1: Material change proposal
-    thread1_ts = clock.tick()
-    emit_message(
+    thread1_ts = emit_message(
         "C_DRONE_STRUCT",
         "U_MAYA",
         "Aluminum bracket reacts with solvent X. Proposing carbon fiber for Rev C. Decision needed by Friday or EVT build slips.",
-        thread1_ts,
+        None,
     )
     emit_message(
         "C_DRONE_STRUCT",
@@ -112,12 +114,11 @@ def carbon_fiber_demo(clock: SimClock) -> List[Dict]:
     emit_reaction("C_DRONE_STRUCT", "rotating_light", thread1_ts)
 
     # Thread 2: Supply chain lead time
-    thread2_ts = clock.tick()
-    emit_message(
+    thread2_ts = emit_message(
         "C_DRONE_SUPPLY",
         "U_SAM",
         "Supply chain: Vendor A lead time 8 weeks, MOQ 500. Vendor B can do 6 weeks but higher cost.",
-        thread2_ts,
+        None,
     )
     emit_message(
         "C_DRONE_SUPPLY",
@@ -127,21 +128,19 @@ def carbon_fiber_demo(clock: SimClock) -> List[Dict]:
     )
 
     # Thread 3: RF test risk
-    thread3_ts = clock.tick()
-    emit_message(
+    thread3_ts = emit_message(
         "C_DRONE_STRUCT",
         "U_MAYA",
         "RF test risk: carbon fiber near antenna mount could worsen RF; need test before DVT.",
-        thread3_ts,
+        None,
     )
 
     # Thread 4: Build schedule / action items
-    thread4_ts = clock.tick()
-    emit_message(
+    thread4_ts = emit_message(
         "C_DRONE_STRUCT",
         "U_PRIYA",
         "Build schedule: decision review tomorrow 2pm; owners <@U_MAYA> and <@U_SAM>; action list pending.",
-        thread4_ts,
+        None,
     )
     emit_message(
         "C_DRONE_STRUCT",
