@@ -106,6 +106,10 @@ curl http://localhost:8000/schedules
 curl -X POST http://localhost:8000/schedules/<schedule_id>/run_now
 ```
 
+## Simulator Demo
+
+See `docs/demo.md` for the mock Slack streaming simulator and demo runbook.
+
 ## Slack App Setup
 
 1. Create a Slack app and enable Event Subscriptions.
