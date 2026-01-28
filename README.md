@@ -1,6 +1,6 @@
-# EverCurrent Daily Digest Base Infrastructure
+# Behavior-Based Retrieval for Engineering Teams
 
-This is a production-shaped backend skeleton for a Slack-based Daily Digest system. It stops after embedding storage (no retrieval, re-ranking, or delivery yet).
+This is a production-shaped backend for a Slack-based digest system designed to keep engineering teams aligned. It includes ingestion, enrichment, embeddings, retrieval, reranking, feedback-driven user learning, and digest delivery. A built-in simulator can stream Slack-like events in real time for demos (no Slack required).
 
 ## Run
 
@@ -25,6 +25,7 @@ Optional environment variables:
 6. Worker builds thread objects
 7. Deterministic enrichment into digest items
 8. Deterministic embedding computation and storage
+9. Retrieval, reranking, and digest delivery
 
 ## Dedupe Key
 
@@ -108,7 +109,73 @@ curl -X POST http://localhost:8000/schedules/<schedule_id>/run_now
 
 ## Simulator Demo
 
-See `docs/demo.md` for the mock Slack streaming simulator and demo runbook.
+See `docs/demo.md` for the mock Slack streaming simulator and demo runbook. The simulator streams Slack-like events in real time (or accelerated) to emulate a live team conversation.
+
+### Live POV watch (demo)
+
+Start the simulator:
+
+```bash
+curl -X POST http://127.0.0.1:8000/simulate/start \
+  -H "Content-Type: application/json" \
+  -d '{"scenario_id":"carbon_fiber_demo","speed_multiplier":1}'
+```
+
+Watch three POVs in separate terminals:
+
+```bash
+watch -n 2 'curl -s "http://127.0.0.1:8000/digest?user_id=U_MAYA&project_id=proj-drone&n=5" \
+| jq -r ".items | to_entries | .[] | \"\(.key+1). \(.value.title) | why=\(.value.why_shown) | final=\(.value.score_breakdown.final_score) | sim=\(.value.score_breakdown.sim) | urg=\(.value.urgency) | own=\(.value.score_breakdown.ownership)\" "'
+```
+
+```bash
+watch -n 2 'curl -s "http://127.0.0.1:8000/digest?user_id=U_SAM&project_id=proj-drone&n=5" \
+| jq -r ".items | to_entries | .[] | \"\(.key+1). \(.value.title) | why=\(.value.why_shown) | final=\(.value.score_breakdown.final_score) | sim=\(.value.score_breakdown.sim) | urg=\(.value.urgency) | own=\(.value.score_breakdown.ownership)\" "'
+```
+
+```bash
+watch -n 2 'curl -s "http://127.0.0.1:8000/digest?user_id=U_PRIYA&project_id=proj-drone&n=5" \
+| jq -r ".items | to_entries | .[] | \"\(.key+1). \(.value.title) | why=\(.value.why_shown) | final=\(.value.score_breakdown.final_score) | sim=\(.value.score_breakdown.sim) | urg=\(.value.urgency) | own=\(.value.score_breakdown.ownership)\" "'
+```
+
+Change phase EVT -> DVT and watch rankings shift:
+
+```bash
+curl -X PATCH http://127.0.0.1:8000/projects/proj-drone/phase \
+  -H "Content-Type: application/json" \
+  -d '{"phase_key":"DVT"}'
+```
+
+Inject an urgent supply chain update to see priority changes:
+
+```bash
+curl -X POST http://127.0.0.1:8000/sim/events \
+  -H "Content-Type: application/json" \
+  -d '{
+    "event_id": "EvLIVE_SUPP_001",
+    "event_time": 1700020005,
+    "team_id": "T_DEMO",
+    "type": "event_callback",
+    "event": {
+      "type": "message",
+      "channel": "C_DRONE_SUPPLY",
+      "user": "U_SAM",
+      "text": "URGENT: Vendor A slipped to 14 weeks, MOQ 900. If we don’t decide today, EVT slips.",
+      "ts": "1700020005.001",
+      "thread_ts": "1700020005.001"
+    }
+  }'
+```
+
+Apply feedback to shift user focus (example for U_SAM):
+
+```bash
+curl -s "http://127.0.0.1:8000/items?limit=10" | jq -r '.[] | "\(.thread_ts) | \(.title)"'
+
+curl -X POST http://127.0.0.1:8000/feedback \
+  -H "Content-Type: application/json" \
+  -d '{"user_id":"U_SAM","project_id":"proj-drone","thread_ts":"<THREAD_TS>","action":"thumbs_up"}'
+```
 
 ## Slack App Setup
 
