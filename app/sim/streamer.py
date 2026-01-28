@@ -1,4 +1,5 @@
 import asyncio
+import time
 from dataclasses import dataclass, field
 from typing import Dict, Optional
 
@@ -18,6 +19,7 @@ class SimState:
     loop: bool = False
     task: Optional[asyncio.Task] = None
     clock: SimClock = field(default_factory=SimClock)
+    run_id: Optional[str] = None
 
 
 STATE = SimState()
@@ -31,13 +33,15 @@ def reset_state() -> None:
     STATE.speed_multiplier = 1.0
     STATE.max_events = None
     STATE.loop = False
-    STATE.clock = SimClock()
+    STATE.clock = SimClock(start_epoch=time.time())
+    STATE.run_id = None
 
 
 async def _emit_events(scenario_id: str) -> None:
     try:
         while STATE.running:
-            events = get_scenario_events(scenario_id, STATE.clock)
+            run_id = STATE.run_id or "run"
+            events = get_scenario_events(scenario_id, STATE.clock, run_id)
             for event in events:
                 if not STATE.running:
                     break
@@ -61,6 +65,7 @@ def start_streaming(
     speed_multiplier: float = 1.0,
     max_events: Optional[int] = None,
     loop: bool = False,
+    run_id: Optional[str] = None,
 ) -> None:
     if STATE.running:
         return
@@ -69,6 +74,7 @@ def start_streaming(
     STATE.speed_multiplier = speed_multiplier
     STATE.max_events = max_events
     STATE.loop = loop
+    STATE.run_id = run_id or f"{int(time.time())}"
     STATE.task = asyncio.create_task(_emit_events(scenario_id))
 
 

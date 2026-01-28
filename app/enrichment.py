@@ -71,8 +71,23 @@ def compute_urgency(text: str, reactions_json_list: List[str]) -> float:
     return min(score, 1.0)
 
 
-def build_title(entities: Dict[str, List[str]]) -> str:
+def build_title(entities: Dict[str, List[str]], thread_text: str) -> str:
     materials = [m.lower() for m in entities.get("materials", [])]
+    lowered = thread_text.lower()
+
+    if "lead time" in lowered or "moq" in lowered or "vendor" in lowered:
+        return "Supply chain risk: lead time / vendor constraints"
+    if "rf" in lowered and ("antenna" in lowered or "test" in lowered):
+        return "RF test risk near antenna mount"
+    if "schedule" in lowered or "milestone" in lowered or "owners" in lowered:
+        return "Build schedule and action items"
+    if "firmware" in lowered or "fw" in lowered or "calibration" in lowered:
+        return "Firmware update and calibration status"
+    if "customer" in lowered or "client" in lowered:
+        return "Customer request or change ask"
+    if "fyi" in lowered or "reminder" in lowered:
+        return "FYI and reminders"
+
     if "carbon fiber" in materials and ("aluminum" in materials or "aluminium" in materials):
         return "Material change proposal: aluminum -> carbon fiber"
     if materials:
@@ -103,6 +118,6 @@ def enrich_thread(thread_ts: str) -> Tuple[str, List[str], Dict[str, List[str]],
     entities = extract_entities(thread_text)
     reactions_json_list = [msg.get("reactions_json") for msg in messages]
     urgency = compute_urgency(thread_text, reactions_json_list)
-    title = build_title(entities)
+    title = build_title(entities, thread_text)
     summary = build_summary(messages)
     return title, labels, entities, urgency, summary

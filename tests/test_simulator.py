@@ -32,7 +32,7 @@ def ingest_events(events):
 @pytest.mark.asyncio
 async def test_sim_events_endpoint_accepts_payload():
     client = TestClient(app)
-    events = get_scenario_events("carbon_fiber_demo", SimClock())
+    events = get_scenario_events("carbon_fiber_demo", SimClock(), "test")
     response = client.post("/sim/events", json=events[0])
     assert response.status_code == 200
     assert response.json()["status"] in {"queued", "duplicate"}
@@ -40,7 +40,7 @@ async def test_sim_events_endpoint_accepts_payload():
 
 @pytest.mark.asyncio
 async def test_streaming_builds_threads_and_items():
-    events = get_scenario_events("carbon_fiber_demo", SimClock())
+    events = get_scenario_events("carbon_fiber_demo", SimClock(), "test")
     for payload in ingest_events(events):
         await process_event(payload)
     threads = db.fetch_threads(10)
@@ -67,7 +67,7 @@ async def test_digest_differs_by_role_and_phase():
         db.add_user_channel(user_id, "C_DRONE_STRUCT")
         db.add_user_channel(user_id, "C_DRONE_SUPPLY")
 
-    events = get_scenario_events("carbon_fiber_demo", SimClock())
+    events = get_scenario_events("carbon_fiber_demo", SimClock(), "test")
     for payload in ingest_events(events):
         await process_event(payload)
 
@@ -94,7 +94,7 @@ async def test_feedback_changes_user_vector():
     create_user("U_SAM", "Sam", "role-supply")
     db.add_user_channel("U_SAM", "C_DRONE_SUPPLY")
 
-    events = get_scenario_events("carbon_fiber_demo", SimClock())
+    events = get_scenario_events("carbon_fiber_demo", SimClock(), "test")
     for payload in ingest_events(events):
         await process_event(payload)
 

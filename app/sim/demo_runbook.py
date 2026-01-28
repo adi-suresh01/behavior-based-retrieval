@@ -97,7 +97,7 @@ async def main() -> None:
         {"scenario_id": "carbon_fiber_demo", "speed_multiplier": 5},
     )
 
-    target_events = len(get_scenario_events("carbon_fiber_demo", SimClock()))
+    target_events = len(get_scenario_events("carbon_fiber_demo", SimClock(), "run"))
     while True:
         status = await client.get("/simulate/status")
         if status["emitted_count"] >= target_events and sum(status["queue_sizes"].values()) == 0:

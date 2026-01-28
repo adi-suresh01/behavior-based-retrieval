@@ -28,7 +28,14 @@ async def simulate_start(payload: Dict[str, Any]):
     speed_multiplier = float(payload.get("speed_multiplier", 1.0))
     max_events = payload.get("max_events")
     loop = bool(payload.get("loop", False))
-    start_streaming(scenario_id, speed_multiplier=speed_multiplier, max_events=max_events, loop=loop)
+    run_id = payload.get("run_id")
+    start_streaming(
+        scenario_id,
+        speed_multiplier=speed_multiplier,
+        max_events=max_events,
+        loop=loop,
+        run_id=run_id,
+    )
     return {"status": "started", "scenario_id": scenario_id}
 
 

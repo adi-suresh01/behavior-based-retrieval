@@ -21,7 +21,7 @@ def _event_id(prefix: str, idx: int) -> str:
     return f"Ev{prefix}{idx:04d}"
 
 
-def carbon_fiber_demo(clock: SimClock) -> List[Dict]:
+def carbon_fiber_demo(clock: SimClock, run_id: str) -> List[Dict]:
     events: List[Dict] = []
     idx = 0
 
@@ -32,7 +32,7 @@ def carbon_fiber_demo(clock: SimClock) -> List[Dict]:
             thread_ts = ts
         events.append(
             {
-                "event_id": _event_id("M", idx),
+                "event_id": _event_id(f"{run_id}M", idx),
                 "event_time": int(ts),
                 "team_id": "T_DEMO",
                 "type": "event_callback",
@@ -54,7 +54,7 @@ def carbon_fiber_demo(clock: SimClock) -> List[Dict]:
         ts = clock.tick()
         events.append(
             {
-                "event_id": _event_id("R", idx),
+                "event_id": _event_id(f"{run_id}R", idx),
                 "event_time": int(ts),
                 "team_id": "T_DEMO",
                 "type": "event_callback",
@@ -73,7 +73,7 @@ def carbon_fiber_demo(clock: SimClock) -> List[Dict]:
         now = clock.tick()
         events.append(
             {
-                "event_id": _event_id("E", idx),
+                "event_id": _event_id(f"{run_id}E", idx),
                 "event_time": int(now),
                 "team_id": "T_DEMO",
                 "type": "event_callback",
@@ -149,6 +149,38 @@ def carbon_fiber_demo(clock: SimClock) -> List[Dict]:
         thread4_ts,
     )
 
+    # Thread 5: Low-priority FYI
+    thread5_ts = emit_message(
+        "C_DRONE_STRUCT",
+        "U_MAYA",
+        "FYI: sticker design updated for DroneV2 packaging.",
+        None,
+    )
+
+    # Thread 6: Firmware note (software-ish)
+    thread6_ts = emit_message(
+        "C_DRONE_STRUCT",
+        "U_PRIYA",
+        "FW patch ready for ESC calibration; no blockers expected.",
+        None,
+    )
+
+    # Thread 7: Customer request
+    thread7_ts = emit_message(
+        "C_DRONE_SUPPLY",
+        "U_SAM",
+        "Customer asked about battery swap options and spares availability.",
+        None,
+    )
+
+    # Thread 8: Low-signal reminder
+    thread8_ts = emit_message(
+        "C_DRONE_STRUCT",
+        "U_PRIYA",
+        "Reminder: weekly status update call on Thursday morning.",
+        None,
+    )
+
     # Edit the supply chain root message to reflect updated MOQ
     emit_edit(
         "C_DRONE_SUPPLY",
@@ -160,7 +192,7 @@ def carbon_fiber_demo(clock: SimClock) -> List[Dict]:
     return events
 
 
-def get_scenario_events(scenario_id: str, clock: SimClock) -> List[Dict]:
+def get_scenario_events(scenario_id: str, clock: SimClock, run_id: str) -> List[Dict]:
     if scenario_id == "carbon_fiber_demo":
-        return carbon_fiber_demo(clock)
+        return carbon_fiber_demo(clock, run_id)
     raise ValueError("unknown_scenario")
